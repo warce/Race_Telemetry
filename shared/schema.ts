@@ -9,6 +9,7 @@ export const sessions = pgTable("sessions", {
   startTime: timestamp("start_time"),
   endTime: timestamp("end_time"),
   trackConditions: jsonb("track_conditions").default({}),
+  targetLaps: integer("target_laps").default(20),
 });
 
 export const karts = pgTable("karts", {
