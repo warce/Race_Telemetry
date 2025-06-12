@@ -112,80 +112,78 @@ export default function DebugConsole({ sessionId, isSessionRunning }: DebugConso
   }, []);
 
   return (
-    <Card className="mt-8 bg-dark-surface border-dark-border">
-      <CardHeader className="border-b border-dark-border">
-        <CardTitle className="text-lg font-semibold text-white">
-          Development Console
-        </CardTitle>
-        <p className="text-sm text-gray-400 mt-1">
-          Mock data simulation and decoder integration testing
-        </p>
-      </CardHeader>
+    <div className="h-full flex flex-col bg-dark-surface">
+      {/* Compact Header */}
+      <div className="px-4 py-2 border-b border-dark-border flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-white">Console de Desenvolvimento</h3>
+          <div className="flex items-center space-x-2 text-xs text-gray-400">
+            <span>Simulação</span>
+            <span>•</span>
+            <span>Integração</span>
+          </div>
+        </div>
+      </div>
       
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Mock Data Controls */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-3">
-              Mock Data Simulation
-            </h4>
-            <div className="space-y-3">
+      {/* Horizontal Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Controls - Left Side */}
+        <div className="w-96 p-4 border-r border-dark-border flex-shrink-0">
+          <div className="flex flex-wrap gap-3 items-center">
+            <button
+              onClick={() => simulateLapCrossing.mutate()}
+              disabled={!isSessionRunning || simulateLapCrossing.isPending}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            >
+              <Play className="w-3 h-3 mr-2" />
+              {simulateLapCrossing.isPending ? "Simulando..." : "Simular Volta"}
+            </button>
+            
+            <button
+              onClick={() => addLog("Adição de kart: Não implementado", "warning")}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition-colors"
+            >
+              <Plus className="w-3 h-3 mr-2" />
+              Adicionar Kart
+            </button>
+            
+            <button
+              onClick={() => addLog("Simulação de incidente: Não implementado", "warning")}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-yellow-600 hover:bg-yellow-700 text-white transition-colors"
+            >
+              <AlertTriangle className="w-3 h-3 mr-2" />
+              Simular Incidente
+            </button>
+          </div>
+        </div>
+        
+        {/* Decoder Integration - Center */}
+        <div className="w-80 p-4 border-r border-dark-border flex-shrink-0">
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder="IP:Porta do Decodificador"
+                value={decoderIp}
+                onChange={(e) => setDecoderIp(e.target.value)}
+                className="flex-1 h-8 text-sm bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+              />
               <Button
-                onClick={() => simulateLapCrossing.mutate()}
-                disabled={!isSessionRunning || simulateLapCrossing.isPending}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                onClick={testConnection}
+                size="sm"
+                className="bg-gray-600 hover:bg-gray-700 text-white h-8 px-3"
               >
-                <Play className="w-4 h-4 mr-2" />
-                {simulateLapCrossing.isPending ? "Simulating..." : "Simulate Lap Crossing"}
-              </Button>
-              
-              <Button
-                onClick={() => addLog("Random kart addition: Not implemented", "warning")}
-                className="w-full bg-racing-green hover:bg-green-600 text-white font-medium"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Random Kart
-              </Button>
-              
-              <Button
-                onClick={() => addLog("Incident simulation: Not implemented", "warning")}
-                className="w-full bg-racing-yellow hover:bg-yellow-600 text-white font-medium"
-              >
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Simulate Incident
+                <TestTube className="w-3 h-3" />
               </Button>
             </div>
-          </div>
-          
-          {/* Connection Testing */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-300 mb-3">
-              Decoder Integration
-            </h4>
-            <div className="space-y-3">
-              <div className="flex space-x-2">
-                <Input
-                  placeholder="Decoder IP:Port"
-                  value={decoderIp}
-                  onChange={(e) => setDecoderIp(e.target.value)}
-                  className="flex-1 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:ring-racing-red"
-                />
-                <Button
-                  onClick={testConnection}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-medium"
-                >
-                  <TestTube className="w-4 h-4 mr-1" />
-                  Test
-                </Button>
-              </div>
-              
+            
+            <div className="flex gap-2">
               <Select value={dataFormat} onValueChange={setDataFormat}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white focus:ring-racing-red">
+                <SelectTrigger className="h-8 text-sm bg-gray-800 border-gray-600 text-white flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-600">
-                  <SelectItem value="json">JSON over TCP</SelectItem>
-                  <SelectItem value="csv">CSV over Serial</SelectItem>
+                  <SelectItem value="json">JSON TCP</SelectItem>
+                  <SelectItem value="csv">CSV Serial</SelectItem>
                   <SelectItem value="http">HTTP POST</SelectItem>
                   <SelectItem value="websocket">WebSocket</SelectItem>
                 </SelectContent>
@@ -193,36 +191,43 @@ export default function DebugConsole({ sessionId, isSessionRunning }: DebugConso
               
               <Button
                 onClick={startDataCapture}
-                className="w-full bg-racing-red hover:bg-red-700 text-white font-medium"
+                size="sm"
+                className="bg-racing-red hover:bg-red-700 text-white h-8 px-4"
               >
-                <Radio className="w-4 h-4 mr-2" />
-                Start Data Capture
+                <Radio className="w-3 h-3 mr-2" />
+                Capturar
               </Button>
             </div>
           </div>
         </div>
         
-        {/* Live Data Feed */}
-        <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-300 mb-3">
-            Live Data Feed
-          </h4>
+        {/* Activity Log - Right Side */}
+        <div className="flex-1 p-4">
           <div 
             ref={logContainerRef}
-            className="bg-gray-900 border border-gray-700 rounded p-4 h-32 overflow-y-auto font-mono text-xs dark-scrollbar"
+            className="bg-gray-900 border border-gray-700 rounded h-full overflow-y-auto font-mono text-xs p-3"
           >
             {logs.length === 0 ? (
-              <div className="text-gray-500">Console ready...</div>
+              <div className="text-gray-500 italic">Aguardando atividade...</div>
             ) : (
               logs.map((log, index) => (
-                <div key={index} className={getLogColor(log.type)}>
-                  [{log.timestamp}] {log.message}
+                <div
+                  key={index}
+                  className={`mb-1 ${
+                    log.type === "error" ? "text-red-400" :
+                    log.type === "warning" ? "text-yellow-400" :
+                    log.type === "success" ? "text-green-400" :
+                    "text-gray-300"
+                  }`}
+                >
+                  <span className="text-gray-500">[{log.timestamp}]</span>{" "}
+                  <span>{log.message}</span>
                 </div>
               ))
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
