@@ -58,21 +58,20 @@ export default function LiveLeaderboard({ leaderboard, isLive }: LiveLeaderboard
       </CardHeader>
       
       <CardContent className="p-0 flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto dark-scrollbar">
+        <div className="h-full overflow-y-auto dark-scrollbar pb-4">
           <table className="w-full">
             <thead className="bg-gray-800 sticky top-0">
               <tr className="text-xs font-medium text-gray-100 uppercase tracking-wider">
-                <th className="px-2 py-2 text-left w-8">Pos</th>
-                <th className="px-2 py-2 text-left w-20">Piloto</th>
-                <th className="px-2 py-2 text-right w-20">Melhor Volta</th>
-                <th className="px-2 py-2 text-right w-20">Última Volta</th>
-                <th className="px-2 py-2 text-right w-16">Diferença</th>
+                <th className="px-2 py-2 text-center w-8">Pos</th>
+                <th className="px-2 py-2 text-center w-24">Piloto</th>
+                <th className="px-2 py-2 text-center w-24">Última Volta</th>
+                <th className="px-2 py-2 text-center w-20">Diferença</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
               {leaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
                     Nenhum dado de cronometragem disponível. Inicie a sessão para ver resultados ao vivo.
                   </td>
                 </tr>
@@ -82,13 +81,13 @@ export default function LiveLeaderboard({ leaderboard, isLive }: LiveLeaderboard
                     key={entry.kartId} 
                     className="hover:bg-gray-800 transition-colors h-10"
                   >
-                    <td className="px-2 py-1">
+                    <td className="px-2 py-1 text-center">
                       <span className={`text-sm font-bold ${getPositionColor(entry.position)}`}>
                         {entry.position}
                       </span>
                     </td>
                     <td className="px-2 py-1">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center justify-center space-x-2">
                         <div 
                           className="w-4 h-3 rounded-sm flex items-center justify-center text-[10px] font-bold text-white"
                           style={{ backgroundColor: entry.color }}
@@ -100,17 +99,12 @@ export default function LiveLeaderboard({ leaderboard, isLive }: LiveLeaderboard
                         </span>
                       </div>
                     </td>
-                    <td className="px-2 py-1 text-right">
-                      <span className="text-sm font-mono text-racing-green">
-                        {entry.bestLap ? formatLapTime(entry.bestLap) : "--:--"}
-                      </span>
-                    </td>
-                    <td className="px-2 py-1 text-right">
+                    <td className="px-2 py-1 text-center">
                       <span className="text-sm font-mono text-white">
                         {entry.lastLap ? formatLapTime(entry.lastLap) : "--:--"}
                       </span>
                     </td>
-                    <td className="px-2 py-1 text-right">
+                    <td className="px-2 py-1 text-center">
                       <span className="text-sm font-mono text-white">
                         {formatGap(entry.gap)}
                       </span>
