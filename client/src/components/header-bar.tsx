@@ -1,4 +1,4 @@
-import { FlagIcon, Play, Square, RotateCcw } from "lucide-react";
+import { FlagIcon, Play, Square, RotateCcw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Session } from "@shared/schema";
 import kartRacingPath from "@assets/image_1749778709365.png";
@@ -8,13 +8,15 @@ interface HeaderBarProps {
   onStartSession: () => void;
   onStopSession: () => void;
   onResetSession: () => void;
+  onAddKart?: () => void;
 }
 
 export default function HeaderBar({ 
   session, 
   onStartSession, 
   onStopSession, 
-  onResetSession 
+  onResetSession,
+  onAddKart 
 }: HeaderBarProps) {
   const isRunning = session?.status === "running";
   

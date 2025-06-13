@@ -39,6 +39,16 @@ export const telemetryData = pgTable("telemetry_data", {
   data: jsonb("data").notNull(),
 });
 
+export const incidents = pgTable("incidents", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  kartId: integer("kart_id"),
+  type: text("type").notNull(),
+  description: text("description"),
+  timestamp: timestamp("timestamp").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertSessionSchema = createInsertSchema(sessions).pick({
   name: true,
   status: true,

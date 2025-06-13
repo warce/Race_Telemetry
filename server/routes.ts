@@ -292,6 +292,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete individual kart
+  app.delete("/api/karts/:id", async (req, res) => {
+    try {
+      const kartId = parseInt(req.params.id);
+      const kart = await storage.getKart(kartId);
+      
+      if (!kart) {
+        return res.status(404).json({ error: "Kart not found" });
+      }
+      
+      await storage.updateKartStatus(kartId, false);
+      
+      // Emit event to notify clients
+      io.emit("kart-removed", { kartId, kart });
+      
+      res.json({ message: "Kart removed successfully", kart });
+    } catch (error) {
+      console.error("Error removing kart:", error);
+      res.status(500).json({ error: "Failed to remove kart" });
+    }
+  });
+
+  // Clear all karts
+  app.delete("/api/karts/clear", async (req, res) => {
+    try {
+      await storage.clearAllKarts();
+      
+      // Emit event to notify clients
+      io.emit("karts-cleared");
+      
+      res.json({ message: "All karts cleared successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear karts", error });
+    }
+  });
+
   // Start comprehensive simulation
   app.post("/api/sessions/:id/start-simulation", async (req, res) => {
     try {

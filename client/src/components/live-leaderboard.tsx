@@ -23,12 +23,55 @@ export default function LiveLeaderboard({ leaderboard, isLive }: LiveLeaderboard
     return `+${seconds.toFixed(3)}`;
   };
 
-  const getDriverAbbreviation = (name: string) => {
-    const nameParts = name.split(' ');
-    if (nameParts.length >= 2) {
-      return (nameParts[0].substring(0, 3) + nameParts[1].substring(0, 3)).toUpperCase().substring(0, 3);
+  const getDriverAbbreviation = (name: string, allDrivers: LeaderboardEntry[] = []) => {
+    const generateAbbreviation = (driverName: string, suffix = '') => {
+      const nameParts = driverName.split(' ');
+      let abbrev = '';
+      
+      if (nameParts.length >= 2) {
+        // Try: First 3 of first name + first 3 of last name, take first 3
+        abbrev = (nameParts[0].substring(0, 3) + nameParts[1].substring(0, 3)).substring(0, 3);
+      } else {
+        // Single name: take first 3 letters
+        abbrev = driverName.substring(0, 3);
+      }
+      
+      return (abbrev + suffix).toUpperCase();
+    };
+
+    // Get base abbreviation
+    let abbreviation = generateAbbreviation(name);
+    
+    // Check for conflicts with other drivers
+    const otherDrivers = allDrivers.filter(driver => driver.driverName !== name);
+    const existingAbbrevs = otherDrivers.map(driver => generateAbbreviation(driver.driverName));
+    
+    // If conflict exists, try alternatives
+    let counter = 1;
+    while (existingAbbrevs.includes(abbreviation)) {
+      const nameParts = name.split(' ');
+      
+      if (counter === 1 && nameParts.length >= 2) {
+        // Try: First 2 of first + first of last
+        abbreviation = (nameParts[0].substring(0, 2) + nameParts[1].substring(0, 1)).toUpperCase();
+      } else if (counter === 2 && nameParts.length >= 2) {
+        // Try: First of first + first 2 of last
+        abbreviation = (nameParts[0].substring(0, 1) + nameParts[1].substring(0, 2)).toUpperCase();
+      } else if (counter === 3 && nameParts.length >= 3) {
+        // Try: First + middle + last initial
+        abbreviation = (nameParts[0].substring(0, 1) + nameParts[1].substring(0, 1) + nameParts[2].substring(0, 1)).toUpperCase();
+      } else {
+        // Add numeric suffix
+        const suffix = (counter - 3).toString();
+        abbreviation = generateAbbreviation(name).substring(0, 3 - suffix.length) + suffix;
+      }
+      counter++;
+      
+      // Safety break after 10 attempts
+      if (counter > 10) break;
     }
-    return name.substring(0, 3).toUpperCase();
+    
+    return abbreviation;
   };
 
   const getPositionColor = (position: number) => {
@@ -118,7 +161,7 @@ export default function LiveLeaderboard({ leaderboard, isLive }: LiveLeaderboard
                           #{entry.kartNumber}
                         </div>
                         <span className="text-sm font-bold text-white uppercase font-['Rajdhani'] tracking-wide">
-                          {getDriverAbbreviation(entry.driverName)}
+                          {getDriverAbbreviation(entry.driverName, leaderboard)}
                         </span>
                       </div>
                     </td>

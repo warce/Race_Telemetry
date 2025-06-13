@@ -36,6 +36,7 @@ export interface IStorage {
   
   // Utility methods
   resetSession(sessionId: number): Promise<void>;
+  clearAllKarts(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -315,6 +316,18 @@ export class MemStorage implements IStorage {
 
     // Reset session status
     await this.updateSessionStatus(sessionId, 'stopped');
+  }
+
+  async clearAllKarts(): Promise<void> {
+    // Clear all karts, lap times, and telemetry data
+    this.karts.clear();
+    this.lapTimes.clear();
+    this.telemetryData.clear();
+    
+    // Reset ID counters
+    this.currentKartId = 1;
+    this.currentLapTimeId = 1;
+    this.currentTelemetryId = 1;
   }
 }
 

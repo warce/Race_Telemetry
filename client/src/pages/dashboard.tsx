@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import HeaderBar from "@/components/header-bar";
 import RaceOverview from "@/components/race-overview";
 import LiveLeaderboard from "@/components/live-leaderboard";
 import TimingControls from "@/components/timing-controls";
 import DebugConsole from "@/components/debug-console";
+import AddKartModal from "@/components/add-kart-modal";
 import { useRaceData } from "@/hooks/use-race-data";
 import { connectWebSocket } from "@/lib/websocket";
-import { Play, Pause, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Pause, RotateCcw, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 
 export default function Dashboard() {
   const { 
@@ -21,6 +22,59 @@ export default function Dashboard() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [consoleCollapsed, setConsoleCollapsed] = useState(false);
+  const [addKartModalOpen, setAddKartModalOpen] = useState(false);
+  const [displayTime, setDisplayTime] = useState(0);
+  const lastServerTime = useRef(0);
+  const lastServerTimestamp = useRef(Date.now());
+  const frozenTime = useRef<number | null>(null);
+  const isResetting = useRef(false);
+
+  // Handle session status changes
+  useEffect(() => {
+    if (currentSession?.status === 'stopped') {
+      // Freeze the timer when stopped
+      if (frozenTime.current === null && sessionStats?.sessionTime !== undefined && !isResetting.current) {
+        frozenTime.current = sessionStats.sessionTime;
+        setDisplayTime(sessionStats.sessionTime);
+      }
+    } else if (currentSession?.status === 'running') {
+      // Unfreeze when running again
+      frozenTime.current = null;
+      isResetting.current = false;
+    } else if (currentSession?.status === 'ready') {
+      // Reset state when session is reset
+      frozenTime.current = null;
+      setDisplayTime(0);
+      isResetting.current = false;
+    }
+  }, [currentSession?.status, sessionStats?.sessionTime]);
+
+  // Update display time when server data changes (only if not frozen and not resetting)
+  useEffect(() => {
+    if (sessionStats?.sessionTime !== undefined && frozenTime.current === null && !isResetting.current) {
+      if (currentSession?.status === 'running') {
+        lastServerTime.current = sessionStats.sessionTime;
+        lastServerTimestamp.current = Date.now();
+        setDisplayTime(sessionStats.sessionTime);
+      }
+    }
+  }, [sessionStats?.sessionTime, currentSession?.status]);
+
+  // Smooth timer interpolation at 60fps (only when running and not frozen and not resetting)
+  useEffect(() => {
+    if (currentSession?.status !== 'running' || frozenTime.current !== null || isResetting.current) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - lastServerTimestamp.current;
+      const interpolatedTime = lastServerTime.current + elapsed;
+      setDisplayTime(interpolatedTime);
+    }, 16); // ~60fps
+
+    return () => clearInterval(interval);
+  }, [currentSession?.status, frozenTime.current]);
 
   useEffect(() => {
     if (currentSession) {
@@ -43,6 +97,7 @@ export default function Dashboard() {
         onStartSession={() => updateSessionStatus(currentSession?.id || 1, "running")}
         onStopSession={() => updateSessionStatus(currentSession?.id || 1, "stopped")}
         onResetSession={() => resetSession(currentSession?.id || 1)}
+        onAddKart={() => setAddKartModalOpen(true)}
       />
       {/* Broadcast Layout with Chroma Key Center */}
       <main className="relative h-[calc(100vh-4rem)] overflow-hidden">
@@ -58,27 +113,39 @@ export default function Dashboard() {
 
         {/* Top Stats Bar */}
         <div className="absolute top-4 left-4 right-4 z-10">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mt-[-14px] mb-[-14px]">
             <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center">
-              <div className="text-sm text-gray-400">Tempo de Sessão</div>
-              <div className="text-xl font-mono text-racing-green">
-                {sessionStats ? (() => {
-                  const totalSeconds = Math.floor(sessionStats.sessionTime / 1000);
-                  const hours = Math.floor(totalSeconds / 3600);
-                  const minutes = Math.floor((totalSeconds % 3600) / 60);
-                  const seconds = totalSeconds % 60;
-                  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                })() : '00:00:00'}
+              <div className="text-sm text-gray-400">Tempo</div>
+              <div className="flex items-center gap-2">
+                <div className="text-xl font-mono text-racing-green">
+                  {(() => {
+                    const ms = displayTime;
+                    const totalSeconds = Math.floor(ms / 1000);
+                    const minutes = Math.floor(totalSeconds / 60);
+                    const seconds = totalSeconds % 60;
+                    const milliseconds = Math.floor(ms % 1000);
+                    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+                  })()}
+                </div>
+                <button
+                  onClick={() => {
+                    // Set reset flag to prevent server data from updating display
+                    isResetting.current = true;
+                    // Clear all timer states immediately
+                    frozenTime.current = null;
+                    lastServerTime.current = 0;
+                    lastServerTimestamp.current = Date.now();
+                    setDisplayTime(0);
+                    // Reset session on backend
+                    resetSession(currentSession?.id || 1);
+                  }}
+                  className="p-1 hover:bg-gray-700 rounded transition-colors"
+                  title="Resetar Timer"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-400 hover:text-white" />
+                </button>
               </div>
             </div>
-            
-            <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center">
-              <div className="text-sm text-gray-400">Melhor Volta</div>
-              <div className="text-xl font-mono text-racing-green">
-                {sessionStats?.bestLap ? `${(sessionStats.bestLap.time / 1000).toFixed(3)}s` : '---.---'}
-              </div>
-            </div>
-            
             <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center">
               <div className="text-sm text-gray-400">Voltas</div>
               <div className="text-xl font-mono text-racing-green">
@@ -108,7 +175,7 @@ export default function Dashboard() {
         </div>
 
         {/* Collapsible Right Sidebar */}
-        <div className={`absolute top-20 bottom-20 z-10 transition-all duration-300 ease-in-out ${
+        <div className={`absolute top-24 bottom-20 z-10 transition-all duration-300 ease-in-out ${
           sidebarCollapsed ? 'right-0 w-12' : 'right-4 w-80'
         }`}>
           {/* Collapse/Expand Button */}
@@ -123,11 +190,9 @@ export default function Dashboard() {
           </button>
 
           {/* Sidebar Content */}
-          <div className={`h-full bg-dark-surface rounded-lg border border-dark-border overflow-hidden transition-all duration-300 ${
-            sidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}>
+          <div className="h-full bg-dark-surface rounded-lg border border-dark-border overflow-hidden transition-all duration-300 opacity-100 mt-[-8px] mb-[-8px]">
             {!sidebarCollapsed && (
-              <div className="h-full flex flex-col gap-4 p-4">
+              <div className="h-full flex flex-col gap-4 p-4 mt-[14px] mb-[14px]">
                 {/* Timing Controls */}
                 <div className="flex-1 bg-dark-surface rounded-lg border border-dark-border overflow-hidden">
                   <TimingControls 
@@ -138,7 +203,7 @@ export default function Dashboard() {
                 
                 {/* Track Conditions */}
                 <div className="bg-dark-surface rounded-lg border border-dark-border p-4">
-                  <div className="text-sm font-medium text-gray-300 mb-3">Condições da Pista</div>
+                  <div className="mb-3 text-center text-[18px] font-semibold text-[#ffffff]">Condições da Pista</div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Clima</span>
@@ -183,7 +248,7 @@ export default function Dashboard() {
             className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full bg-dark-surface border border-dark-border rounded-t-lg px-4 py-2 hover:bg-gray-700 transition-colors z-20"
           >
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-400">Console de Desenvolvimento</span>
+              <span className="text-xs text-gray-400">Configurações</span>
               {consoleCollapsed ? 
                 <ChevronLeft className="w-3 h-3 text-gray-400 rotate-90" /> : 
                 <ChevronRight className="w-3 h-3 text-gray-400 rotate-90" />
@@ -199,6 +264,7 @@ export default function Dashboard() {
               <DebugConsole 
                 sessionId={currentSession?.id || 1}
                 isSessionRunning={currentSession?.status === "running"}
+                onAddKart={() => setAddKartModalOpen(true)}
               />
             )}
           </div>
@@ -226,6 +292,11 @@ export default function Dashboard() {
           </button>
         </div>
       </main>
+      {/* Add Kart Modal */}
+      <AddKartModal 
+        open={addKartModalOpen}
+        onOpenChange={setAddKartModalOpen}
+      />
     </div>
   );
 }

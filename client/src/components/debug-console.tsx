@@ -3,14 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Plus, AlertTriangle, Radio, TestTube } from "lucide-react";
+import { Plus, FileText, Radio, TestTube, Trash2, UserMinus } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import RemoveKartModal from "./remove-kart-modal";
+import RaceReportGenerator from "./race-report-generator";
 
 interface DebugConsoleProps {
   sessionId: number;
   isSessionRunning: boolean;
+  onAddKart?: () => void;
 }
 
 interface LogEntry {
@@ -19,13 +22,36 @@ interface LogEntry {
   type: "info" | "success" | "warning" | "error";
 }
 
-export default function DebugConsole({ sessionId, isSessionRunning }: DebugConsoleProps) {
+export default function DebugConsole({ sessionId, isSessionRunning, onAddKart }: DebugConsoleProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [decoderIp, setDecoderIp] = useState("");
   const [dataFormat, setDataFormat] = useState("json");
+  const [removeKartModalOpen, setRemoveKartModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const logContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const clearAllKarts = useMutation({
+    mutationFn: () => apiRequest("DELETE", "/api/karts/clear"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/karts"] });
+      toast({
+        title: "Karts removidos",
+        description: "Todos os karts foram removidos com sucesso.",
+      });
+      addLog("Todos os karts foram removidos do sistema", "success");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao remover karts",
+        description: error.message || "Falha ao remover os karts.",
+        variant: "destructive",
+      });
+      addLog(`Erro ao remover karts: ${error.message}`, "error");
+    },
+  });
 
   const addLog = (message: string, type: LogEntry["type"] = "info") => {
     const timestamp = new Date().toLocaleTimeString("en-US", { 
@@ -46,25 +72,7 @@ export default function DebugConsole({ sessionId, isSessionRunning }: DebugConso
     }
   }, [logs]);
 
-  const simulateLapCrossing = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/simulate/lap-crossing"),
-    onSuccess: () => {
-      addLog("Simulated lap crossing completed", "success");
-      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
-      toast({
-        title: "Lap Simulated",
-        description: "Random lap crossing has been simulated successfully",
-      });
-    },
-    onError: (error) => {
-      addLog(`Failed to simulate lap crossing: ${error.message}`, "error");
-      toast({
-        title: "Simulation Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
+
 
   const testConnection = () => {
     if (!decoderIp) {
@@ -113,52 +121,50 @@ export default function DebugConsole({ sessionId, isSessionRunning }: DebugConso
 
   return (
     <div className="h-full flex flex-col bg-dark-surface">
-      {/* Compact Header */}
-      <div className="px-4 py-2 border-b border-dark-border flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-white">Console de Desenvolvimento</h3>
-          <div className="flex items-center space-x-2 text-xs text-gray-400">
-            <span>Simulação</span>
-            <span>•</span>
-            <span>Integração</span>
-          </div>
-        </div>
-      </div>
-      
       {/* Horizontal Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Controls - Left Side */}
         <div className="w-96 p-4 border-r border-dark-border flex-shrink-0">
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center mt-[6px] mb-[6px] ml-[23px] mr-[23px]">
+            {onAddKart && (
+              <button
+                onClick={onAddKart}
+                className="inline-flex items-center px-4 py-2 font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors w-36 justify-center text-[12px]"
+              >
+                <Plus className="w-3 h-3 mr-2" />
+                Adicionar Kart
+              </button>
+            )}
+            
             <button
-              onClick={() => simulateLapCrossing.mutate()}
-              disabled={!isSessionRunning || simulateLapCrossing.isPending}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+              onClick={() => setRemoveKartModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-orange-600 hover:bg-orange-700 text-white transition-colors w-36 justify-center"
             >
-              <Play className="w-3 h-3 mr-2" />
-              {simulateLapCrossing.isPending ? "Simulando..." : "Simular Volta"}
+              <UserMinus className="w-3 h-3 mr-2" />
+              Remover Kart
             </button>
             
             <button
-              onClick={() => addLog("Adição de kart: Não implementado", "warning")}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition-colors"
+              onClick={() => clearAllKarts.mutate()}
+              disabled={clearAllKarts.isPending}
+              className="inline-flex items-center px-4 py-2 font-medium rounded-md bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:pointer-events-none transition-colors w-36 justify-center text-[12px]"
             >
-              <Plus className="w-3 h-3 mr-2" />
-              Adicionar Kart
+              <Trash2 className="w-3 h-3 mr-2" />
+              {clearAllKarts.isPending ? "Removendo..." : "Resetar Karts"}
             </button>
             
             <button
-              onClick={() => addLog("Simulação de incidente: Não implementado", "warning")}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-yellow-600 hover:bg-yellow-700 text-white transition-colors"
+              onClick={() => setReportModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors w-36 justify-center text-[12px]"
             >
-              <AlertTriangle className="w-3 h-3 mr-2" />
-              Simular Incidente
+              <FileText className="w-3 h-3 mr-2" />
+              Gerar Relatório
             </button>
           </div>
         </div>
         
         {/* Decoder Integration - Center */}
-        <div className="w-80 p-4 border-r border-dark-border flex-shrink-0">
+        <div className="w-80 p-4 border-r border-dark-border flex-shrink-0 mt-[8px] mb-[8px]">
           <div className="space-y-3">
             <div className="flex gap-2">
               <Input
@@ -228,6 +234,19 @@ export default function DebugConsole({ sessionId, isSessionRunning }: DebugConso
           </div>
         </div>
       </div>
+
+      {/* Remove Kart Modal */}
+      <RemoveKartModal 
+        open={removeKartModalOpen} 
+        onOpenChange={setRemoveKartModalOpen} 
+      />
+
+      {/* Race Report Generator Modal */}
+      <RaceReportGenerator 
+        open={reportModalOpen} 
+        onOpenChange={setReportModalOpen} 
+        sessionId={sessionId}
+      />
     </div>
   );
 }

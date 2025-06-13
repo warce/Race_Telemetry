@@ -52,8 +52,8 @@ export default function TimingControls({ recentLaps, connectionStatus }: TimingC
     <div className="space-y-6">
       {/* Data Connection Status */}
       <Card className="bg-dark-surface border-dark-border">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-white">
+        <CardHeader className="flex flex-col space-y-1.5 p-6 text-center mt-[-20px] mb-[-20px]">
+          <CardTitle className="text-lg font-semibold text-white text-center">
             Conexão de Dados
           </CardTitle>
         </CardHeader>
@@ -96,7 +96,7 @@ export default function TimingControls({ recentLaps, connectionStatus }: TimingC
       {/* Recent Lap Times */}
       <Card className="bg-dark-surface border-dark-border">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-white">
+          <CardTitle className="text-lg font-semibold text-white text-center">
             Voltas Recentes
           </CardTitle>
         </CardHeader>
@@ -137,7 +137,7 @@ export default function TimingControls({ recentLaps, connectionStatus }: TimingC
       {/* Track Status */}
       <Card className="bg-dark-surface border-dark-border">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-white">
+          <CardTitle className="text-lg font-semibold text-white text-center">
             Condições da Pista
           </CardTitle>
         </CardHeader>
