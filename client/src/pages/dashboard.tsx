@@ -113,43 +113,46 @@ export default function Dashboard() {
 
         {/* Top Stats Bar */}
         <div className="absolute top-4 left-4 right-4 z-10">
-          <div className="flex justify-between items-center mt-[-14px] mb-[-14px]">
-            <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center">
-              <div className="text-sm text-gray-400">Tempo</div>
-              <div className="flex items-center gap-2">
-                <div className="text-xl font-mono text-racing-green">
-                  {(() => {
-                    const ms = displayTime;
-                    const totalSeconds = Math.floor(ms / 1000);
-                    const minutes = Math.floor(totalSeconds / 60);
-                    const seconds = totalSeconds % 60;
-                    const milliseconds = Math.floor(ms % 1000);
-                    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
-                  })()}
+          <div className="flex justify-between items-center mt-[-6px] mb-[-6px]">
+            <div className="flex gap-4 items-center">
+              <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center">
+                <div className="text-sm text-gray-400">Tempo</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-xl font-mono text-racing-green">
+                    {(() => {
+                      const ms = displayTime;
+                      const totalSeconds = Math.floor(ms / 1000);
+                      const minutes = Math.floor(totalSeconds / 60);
+                      const seconds = totalSeconds % 60;
+                      const milliseconds = Math.floor(ms % 1000);
+                      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+                    })()}
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Set reset flag to prevent server data from updating display
+                      isResetting.current = true;
+                      // Clear all timer states immediately
+                      frozenTime.current = null;
+                      lastServerTime.current = 0;
+                      lastServerTimestamp.current = Date.now();
+                      setDisplayTime(0);
+                      // Reset session on backend
+                      resetSession(currentSession?.id || 1);
+                    }}
+                    className="p-1 hover:bg-gray-700 rounded transition-colors"
+                    title="Resetar Timer"
+                  >
+                    <RefreshCw className="w-4 h-4 text-gray-400 hover:text-white" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    // Set reset flag to prevent server data from updating display
-                    isResetting.current = true;
-                    // Clear all timer states immediately
-                    frozenTime.current = null;
-                    lastServerTime.current = 0;
-                    lastServerTimestamp.current = Date.now();
-                    setDisplayTime(0);
-                    // Reset session on backend
-                    resetSession(currentSession?.id || 1);
-                  }}
-                  className="p-1 hover:bg-gray-700 rounded transition-colors"
-                  title="Resetar Timer"
-                >
-                  <RefreshCw className="w-4 h-4 text-gray-400 hover:text-white" />
-                </button>
               </div>
-            </div>
-            <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center">
-              <div className="text-sm text-gray-400">Voltas</div>
-              <div className="text-xl font-mono text-racing-green">
-                {Math.min((sessionStats?.totalLaps || 0) + 1, 20)}/20
+              
+              <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border text-center pl-[27px] pr-[27px] ml-[33px] mr-[33px]">
+                <div className="text-sm text-gray-400">Voltas</div>
+                <div className="text-xl font-mono text-racing-green">
+                  {Math.min((sessionStats?.totalLaps || 0) + 1, 20)}/20
+                </div>
               </div>
             </div>
             
