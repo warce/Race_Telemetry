@@ -52,6 +52,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/sessions/:id", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const { status } = req.body;
+
+      if (!["running", "stopped", "paused"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const session = await storage.updateSessionStatus(sessionId, status);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      // If starting a session, check if we need to generate simulation data
+      if (status === "running") {
+        const existingLaps = await storage.getLapTimes(sessionId);
+        if (existingLaps.length === 0) {
+          // Auto-generate simulation data for demo purposes
+          const karts = await storage.getAllKarts();
+          
+          for (const kart of karts) {
+            if (kart.isActive) {
+              // Generate multiple laps with realistic times
+              const baseLapTime = 42000 + Math.random() * 8000; // 42-50 seconds
+              
+              for (let lapNumber = 1; lapNumber <= Math.floor(Math.random() * 5) + 3; lapNumber++) {
+                const variation = (Math.random() - 0.5) * 3000; // ±3 seconds variation
+                const lapTime = Math.max(35000, baseLapTime + variation);
+                
+                const crossingTime = new Date(Date.now() - (8 - lapNumber) * 55000); // Stagger lap times
+                
+                const lapData = {
+                  sessionId,
+                  kartId: kart.id,
+                  lapNumber,
+                  lapTime: Math.round(lapTime),
+                  crossingTime,
+                  isValid: Math.random() > 0.05 // 95% valid laps
+                };
+                
+                await storage.addLapTime(lapData);
+              }
+            }
+          }
+        }
+      }
+
+      io.emit("session-status-changed", session);
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update session status", error });
+    }
+  });
+
   app.patch("/api/sessions/:id/status", async (req, res) => {
     try {
       const sessionId = parseInt(req.params.id);
@@ -64,6 +119,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = await storage.updateSessionStatus(sessionId, status);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
+      }
+
+      // If starting a session, check if we need to generate simulation data
+      if (status === "running") {
+        const existingLaps = await storage.getLapTimes(sessionId);
+        if (existingLaps.length === 0) {
+          // Auto-generate simulation data for demo purposes
+          const karts = await storage.getAllKarts();
+          
+          for (const kart of karts) {
+            if (kart.isActive) {
+              // Generate multiple laps with realistic times
+              const baseLapTime = 42000 + Math.random() * 8000; // 42-50 seconds
+              
+              for (let lapNumber = 1; lapNumber <= Math.floor(Math.random() * 5) + 3; lapNumber++) {
+                const variation = (Math.random() - 0.5) * 3000; // ±3 seconds variation
+                const lapTime = Math.max(35000, baseLapTime + variation);
+                
+                const crossingTime = new Date(Date.now() - (8 - lapNumber) * 55000); // Stagger lap times
+                
+                const lapData = {
+                  sessionId,
+                  kartId: kart.id,
+                  lapNumber,
+                  lapTime: Math.round(lapTime),
+                  crossingTime,
+                  isValid: Math.random() > 0.05 // 95% valid laps
+                };
+                
+                await storage.addLapTime(lapData);
+              }
+            }
+          }
+        }
       }
 
       io.emit("session-status-changed", session);

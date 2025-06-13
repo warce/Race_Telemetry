@@ -1,6 +1,7 @@
 import { FlagIcon, Play, Square, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Session } from "@shared/schema";
+import kartRacingPath from "@assets/image_1749778709365.png";
 
 interface HeaderBarProps {
   session?: Session;
@@ -22,14 +23,19 @@ export default function HeaderBar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
+              <img 
+                src={kartRacingPath} 
+                alt="Kart Racing" 
+                className="h-10 w-auto rounded-md shadow-md opacity-90 transition-opacity duration-300 hover:opacity-100"
+              />
               <FlagIcon className="text-racing-red w-6 h-6" />
               <h1 className="text-xl font-bold">Telemetria de Corrida</h1>
             </div>
             <div className="hidden md:flex items-center space-x-2 text-sm">
               <span className="text-gray-400">Sessão:</span>
               <span className="font-mono text-racing-green">
-                {session?.name || "Nenhuma Sessão"}
+                {session?.name === "Sessão de Treino" ? "Treino" : (session?.name || "Nenhuma")}
               </span>
             </div>
           </div>
@@ -49,7 +55,7 @@ export default function HeaderBar({
                 onClick={onStartSession}
                 disabled={isRunning}
                 size="sm"
-                className="bg-racing-green hover:bg-green-600 text-white font-medium"
+                className="bg-[#004f1c] hover:bg-green-600 text-white font-medium"
               >
                 <Play className="w-4 h-4 mr-1" />
                 Iniciar

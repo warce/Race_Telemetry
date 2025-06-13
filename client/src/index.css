@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   --background: hsl(0, 0%, 100%);
@@ -26,13 +26,26 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
 
-  /* Racing theme colors */
-  --racing-red: hsl(0, 74%, 45%);
-  --racing-green: hsl(158, 64%, 52%);
-  --racing-yellow: hsl(43, 96%, 56%);
-  --dark-bg: hsl(224, 71%, 4%);
-  --dark-surface: hsl(215, 28%, 17%);
-  --dark-border: hsl(215, 14%, 34%);
+  /* Enhanced racing theme colors */
+  --racing-red: hsl(0, 100%, 65%);
+  --racing-green: hsl(142, 100%, 45%);
+  --racing-yellow: hsl(45, 100%, 60%);
+  --racing-blue: hsl(221, 100%, 65%);
+  --racing-purple: hsl(262, 100%, 70%);
+  --racing-orange: hsl(25, 100%, 60%);
+  --racing-cyan: hsl(185, 100%, 55%);
+  
+  /* Professional surfaces */
+  --dark-bg: hsl(220, 15%, 8%);
+  --dark-surface: hsl(220, 15%, 12%);
+  --dark-surface-elevated: hsl(220, 15%, 16%);
+  --dark-border: hsl(220, 15%, 22%);
+  --dark-border-accent: hsl(220, 30%, 35%);
+  
+  /* Racing gradients */
+  --gradient-leader: linear-gradient(135deg, hsl(45, 100%, 60%) 0%, hsl(25, 100%, 60%) 100%);
+  --gradient-podium: linear-gradient(135deg, hsl(221, 100%, 65%) 0%, hsl(262, 100%, 70%) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(0, 100%, 65%) 0%, hsl(25, 100%, 60%) 100%);
 }
 
 .dark {

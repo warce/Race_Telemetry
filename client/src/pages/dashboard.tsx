@@ -160,13 +160,13 @@ export default function Dashboard() {
                 </div>
 
                 {/* Connection Status */}
-                <div className="bg-dark-surface rounded-lg border border-dark-border p-4">
-                  <div className="text-sm font-medium text-gray-300 mb-2">Conexão do Decodificador</div>
+                <div className="bg-dark-surface rounded-lg border border-dark-border p-4 text-center">
+                  <div className="text-sm font-medium text-gray-300 mb-2 text-left">Decoder Milliard ZW62 </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-racing-green rounded-full animate-pulse"></div>
                     <span className="text-racing-green font-medium">Conectado</span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">UDP Port: 9999</div>
+                  <div className="text-xs text-gray-400 mt-1 text-left">UDP Port: 9999</div>
                 </div>
               </div>
             )}
