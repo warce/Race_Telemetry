@@ -33,8 +33,12 @@ export default function DebugConsole({ sessionId, isSessionRunning, onAddKart }:
   const queryClient = useQueryClient();
 
   const clearAllKarts = useMutation({
-    mutationFn: () => apiRequest("DELETE", "/api/karts/clear"),
-    onSuccess: () => {
+    mutationFn: async () => {
+      addLog("Iniciando remoção de todos os karts...", "info");
+      const response = await apiRequest("DELETE", "/api/karts/clear");
+      return response;
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/karts"] });
       toast({
@@ -44,12 +48,14 @@ export default function DebugConsole({ sessionId, isSessionRunning, onAddKart }:
       addLog("Todos os karts foram removidos do sistema", "success");
     },
     onError: (error: any) => {
+      console.error("Clear karts error:", error);
+      const errorMessage = error?.message || error?.error || "Falha ao remover os karts.";
       toast({
         title: "Erro ao remover karts",
-        description: error.message || "Falha ao remover os karts.",
+        description: errorMessage,
         variant: "destructive",
       });
-      addLog(`Erro ao remover karts: ${error.message}`, "error");
+      addLog(`Erro ao remover karts: ${errorMessage}`, "error");
     },
   });
 
@@ -138,7 +144,7 @@ export default function DebugConsole({ sessionId, isSessionRunning, onAddKart }:
             
             <button
               onClick={() => setRemoveKartModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-orange-600 hover:bg-orange-700 text-white transition-colors w-36 justify-center"
+              className="inline-flex items-center px-4 py-2 font-medium rounded-md bg-orange-600 hover:bg-orange-700 text-white transition-colors w-36 justify-center text-[12px]"
             >
               <UserMinus className="w-3 h-3 mr-2" />
               Remover Kart
@@ -234,13 +240,11 @@ export default function DebugConsole({ sessionId, isSessionRunning, onAddKart }:
           </div>
         </div>
       </div>
-
       {/* Remove Kart Modal */}
       <RemoveKartModal 
         open={removeKartModalOpen} 
         onOpenChange={setRemoveKartModalOpen} 
       />
-
       {/* Race Report Generator Modal */}
       <RaceReportGenerator 
         open={reportModalOpen} 
