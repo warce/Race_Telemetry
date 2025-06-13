@@ -12,7 +12,12 @@ export function connectWebSocket(sessionId: number) {
   const wsUrl = `${protocol}//${window.location.host}`;
   
   socket = io(wsUrl, {
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    timeout: 20000,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    forceNew: true
   });
 
   socket.on("connect", () => {
@@ -20,8 +25,20 @@ export function connectWebSocket(sessionId: number) {
     socket?.emit("join-session", sessionId);
   });
 
-  socket.on("disconnect", () => {
-    console.log("WebSocket disconnected");
+  socket.on("disconnect", (reason) => {
+    console.log("WebSocket disconnected", reason);
+  });
+
+  socket.on("connect_error", (error) => {
+    console.error("WebSocket connection error:", error);
+  });
+
+  socket.on("reconnect", (attemptNumber) => {
+    console.log("WebSocket reconnected after", attemptNumber, "attempts");
+  });
+
+  socket.on("reconnect_error", (error) => {
+    console.error("WebSocket reconnection error:", error);
   });
 
   socket.on("session-status-changed", (session) => {
