@@ -292,6 +292,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear all karts (must come before parameterized route)
+  app.delete("/api/karts/clear", async (req, res) => {
+    try {
+      console.log("Clearing all karts...");
+      await storage.clearAllKarts();
+      console.log("Karts cleared successfully");
+      
+      // Emit event to notify clients
+      io.emit("karts-cleared");
+      
+      res.status(200).json({ message: "All karts cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing karts:", error);
+      res.status(500).json({ 
+        message: "Failed to clear karts", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
   // Delete individual kart
   app.delete("/api/karts/:id", async (req, res) => {
     try {
@@ -311,20 +331,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing kart:", error);
       res.status(500).json({ error: "Failed to remove kart" });
-    }
-  });
-
-  // Clear all karts
-  app.delete("/api/karts/clear", async (req, res) => {
-    try {
-      await storage.clearAllKarts();
-      
-      // Emit event to notify clients
-      io.emit("karts-cleared");
-      
-      res.json({ message: "All karts cleared successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to clear karts", error });
     }
   });
 
